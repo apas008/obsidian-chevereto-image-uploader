@@ -20,7 +20,7 @@ interface ImageUploaderSettings {
 const DEFAULT_SETTINGS: ImageUploaderSettings = {
   apiEndpoint: null,
   token: null,
-  maxWidth: 4096,
+  maxWidth: 2048,
   enableResize: false,
 };
 
@@ -51,9 +51,32 @@ export default class ImageUploader extends Plugin {
         evt.preventDefault();
         for (let file of files) {
           if (file.type.startsWith("image")) {
+            console.log(file.type)
+            new Notice(file.type)
             const randomString = (Math.random() * 10086).toString(36).substr(0, 8)
             const pastePlaceText = `![uploading...](${randomString})\n`
             editor.replaceSelection(pastePlaceText)
+            // Skip compression if the file is a GIF
+            if (file.type === "image/gif") {
+              console.log("gif")
+             
+              const params = new URLSearchParams();
+              params.append('key', this.settings.token);
+              let dataURL = await readFileAsDataURL(file);
+              const source = JSON.stringify(dataURL).split(',')[1].split('"')[0];
+              params.append('source', source);
+
+              axios.post(this.settings.apiEndpoint, params)
+                .then(res => {
+                  const url = objectPath.get(res.data, 'image.url');
+                  const imgMarkdownText = `![](${url})`;
+                  this.replaceText(editor, pastePlaceText, imgMarkdownText);
+                })
+                .catch(err => {
+                  new Notice(err, 5000);
+                  console.log(err);
+                });
+            } else {
             const maxWidth = this.settings.maxWidth
             if (this.settings.enableResize) {
               const compressedFile = await new Promise((resolve, reject) => {
@@ -80,7 +103,7 @@ export default class ImageUploader extends Plugin {
                 console.log(err)
               })
           }
-
+        }
         }
       }
     }))

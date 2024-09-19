@@ -40,8 +40,8 @@ export default class ImageUploaderSettingTab extends PluginSettingTab {
             );
 
         new Setting(containerEl)
-            .setName("Chevereto API Token")
-            .setDesc("the API token of the chevereto.")
+            .setName("Chevereto API Token8")
+            .setDesc("the API1 token of the chevereto.")
             .addTextArea((text) => {
                 text
                     .setPlaceholder("")
